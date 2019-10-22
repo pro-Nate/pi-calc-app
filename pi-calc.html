@@ -1,0 +1,257 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<link rel="stylesheet" type="text/css" href="css/default.css">
+<link rel="stylesheet" type="text/css" href="css/flex-tabs.css">
+</head>
+<body>
+
+<div class="wrapper">  
+
+	<div class="container">  
+  
+		<h3>PI (π) Calculator</h3>
+
+		<div class="tabs">
+			<input name="tabs" type="radio" id="tab-1" checked="checked" class="tab-input"/>
+			<label for="tab-1" class="tab-label">Vanilla</label>
+			<div class="tab-panel">
+				<form id="picalc_form">
+
+					<fieldset>
+						<input placeholder="Number of iterations (millions)" type="text" tabindex="1" id="iteration_limit" autofocus />
+					</fieldset>
+
+					<fieldset>
+						<textarea placeholder="..." id="summary" disabled></textarea>
+					</fieldset>
+
+					<h4 id="result" class="result"></h4>
+
+					<fieldset>
+						<button name="run-pi" type="submit" id="run_pi" disabled tabindex="2">Run Pi</button>
+					</fieldset>
+
+				</form>
+			</div>
+		
+			<input name="tabs" type="radio" id="tab-2" class="tab-input"/>
+			<label for="tab-2" class="tab-label">Vue</label>
+			<div class="tab-panel">
+				<picalc-app-vue></picalc-app-vue>
+			</div>
+		
+			<input name="tabs" type="radio" id="tab-3" class="tab-input"/>
+			<label for="tab-3" class="tab-label">AngularJs</label>
+			<div class="tab-panel">
+				<picalc-app-ng></picalc-app-ng>	
+			</div>
+		</div>
+	</div>
+
+</div>
+
+
+
+<script src="js/speed-mgr.js" type="text/javascript"></script>
+<script src="js/calc-pi.js" type="text/javascript"></script>
+
+
+
+<!-- Vanilla flavour -->
+<script>
+
+	class PiCalcApp {
+	
+		picalcForm = document.getElementById("picalc_form");
+		repInput = document.getElementById("iteration_limit");
+		summaryOutput = document.getElementById("summary");
+		resultOutput = document.getElementById("result");
+		submitFormButton = document.getElementById("run_pi");
+	
+		constructor () {
+			const input = this.repInput;
+			const submit = this.submitFormButton;
+			
+			input.addEventListener("keyup", (e)=> {
+				if (e.keyCode !== 13)	//If not pressed return key ->
+					submit.disabled = !(input.value && input.value.length);
+			});
+	
+			this.picalcForm.addEventListener("submit", (e)=> {
+				e.preventDefault();
+				this.summaryOutput.value = this.resultOutput.innerHTML = "";
+		
+				if (input.value) {
+					submit.disabled = input.disabled = true;
+					calcPi(parseFloat(input.value), false, this.updateSummary)
+						.then((result)=> {
+							this.printResult(result);
+							submit.disabled = input.disabled = false;
+						});
+				}
+			});
+		}
+	
+		updateSummary = (pi, iteration, fraction)=> {
+			this.summaryOutput.value += "iteration: "+ iteration +", pi: " + pi+'\n';
+			this.summaryOutput.scrollTop = this.summaryOutput.scrollHeight;
+		}
+		
+		printResult = (result)=> {
+			this.resultOutput.innerHTML = `<strong>π = ${result.pi}</strong> calculated in ${result.time}ms`;	
+		}
+	
+	}
+	new PiCalcApp();
+	
+</script>
+
+
+
+<!-- Vue flavour -->
+<script type="text/javascript" src="https://unpkg.com/vue@latest/dist/vue.min.js"></script>
+<script type="text/x-template" id="picalc_form-vue-template">
+	<form id="picalc_form_vue" @submit="calcPi">
+		<fieldset>
+			<input type="text" 
+				placeholder="Number of iterations (millions)" 
+				v-model="iterationLimit" 
+				v-bind:disabled="isCalculating" 
+				tabindex="1" 
+				autofocus />
+		</fieldset>
+			
+		<fieldset>
+			<summaryArea v-bind:value="summaryOutput"></summaryArea>
+		</fieldset>
+
+		<h4 class="result" v-if="piOutput">
+			<strong>π = {{piOutput.pi}}</strong> calculated in {{piOutput.time}}ms
+		</h4>
+
+		<fieldset>
+			<button name="run-pi" type="submit" v-bind:disabled="isCalculating || !iterationLimit.length" tabindex="2">Run Pi</button>
+		</fieldset>
+	</form>
+</script>
+<script>
+	Vue.component('summaryArea', {
+		props: ['value'],
+		template: `<textarea placeholder="..." v-model="value" disabled></textarea>`,
+		watch: {
+			value: function (value) {
+				this.$el.scrollTop = this.$el.scrollHeight;
+			}
+		}
+	});
+
+	const piAppVueCfg = {
+		el: "picalc-app-vue",
+		template: '#picalc_form-vue-template',
+		data: {
+			isCalculating: false,
+			iterationLimit: "",
+			summaryOutput: "",
+			piOutput: undefined
+		},
+		methods: {
+			calcPi: function (e) {
+				e.preventDefault();
+				this.summaryOutput = this.piOutput = "";
+				this.isCalculating = true;
+				calcPi(parseFloat(this.iterationLimit), false, this.updateSummary)
+					.then((result)=> {
+						this.piOutput = result;
+						this.isCalculating = false;
+					});
+			},
+			updateSummary: function (pi, iteration, fraction) {
+				this.summaryOutput += "iteration: "+ iteration +", pi: " + pi+'\n';
+			}
+		}
+	};
+	
+	document.addEventListener("DOMContentLoaded", ()=> new Vue(piAppVueCfg));
+</script>
+
+
+
+<!-- AngularJs flavour -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.8/angular.min.js"></script>
+<script type="text/ng-template" id="picalc_form-ng-template.html">
+	<form id="picalc_form_ng" ng-submit="cx.calcPi($event)">
+		<fieldset>
+			<input type="text" 
+				placeholder="Number of iterations (millions)" 
+				ng-model="cx.iterationLimit" 
+				ng-disabled="cx.isCalculating" 
+				tabindex="1" 
+				autofocus />
+		</fieldset>
+			
+		<fieldset>
+			<summary-area value="cx.summaryOutput"></summary-area>
+		</fieldset>
+
+		<h4 class="result" ng-if="cx.piOutput">
+			<strong>π = {{cx.piOutput.pi}}</strong> calculated in {{cx.piOutput.time}}ms
+		</h4>
+
+		<fieldset>
+			<button name="run-pi" type="submit" ng-disabled="cx.isCalculating || !cx.iterationLimit.length" tabindex="2">Run Pi</button>
+		</fieldset>
+	</form>
+</script>
+<script>
+	const picalc_ng_app = angular.module("picalc_ng_app", []);
+	const picalc_ng_tpl = "picalc_form-ng-template.html";
+	
+	picalc_ng_app.directive('summaryArea', ()=> ({
+		scope: {value: "="},
+		template: `<textarea placeholder="..." ng-model="value" disabled></textarea>`,
+        link: (scope, element, attributes)=> {
+            scope.$watch("value", ()=> element[0].scrollTop = element[0].scrollHeight);
+        }
+	}));
+	
+	picalc_ng_app.run(["$templateCache", ($templateCache)=> {
+		$templateCache.put(picalc_ng_tpl, document.getElementById(picalc_ng_tpl).innerHTML);
+	}]);
+	
+	const PicalcAppController = ["$scope", function ($scope) {
+		const cx = this;
+		cx.isCalculating = false;
+		cx.iterationLimit = "";
+		cx.summaryOutput = "";
+		cx.piOutput = undefined;
+		
+		cx.calcPi = (e)=> {
+			e.preventDefault();
+			this.summaryOutput = this.piOutput = "";
+			this.isCalculating = true;
+			calcPi(parseFloat(this.iterationLimit), false, this.updateSummary)
+				.then((result)=> $scope.$apply(()=> {
+					this.piOutput = result;
+					this.isCalculating = false;
+				}));
+		};
+		
+		cx.updateSummary = (pi, iteration, fraction)=> {
+			$scope.$apply(()=> this.summaryOutput += "iteration: "+ iteration +", pi: " + pi+'\n');
+		};
+	}];
+	
+	picalc_ng_app.component("picalcAppNg", {
+		templateUrl: picalc_ng_tpl,
+        controller: PicalcAppController,
+        controllerAs: "cx"
+	});
+	
+	angular.element(document)
+		.ready(() => angular.bootstrap(document.querySelector('picalc-app-ng'), [picalc_ng_app.name]));
+</script>
+
+</body>
+</html>

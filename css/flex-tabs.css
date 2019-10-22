@@ -1,0 +1,52 @@
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 700px;
+  box-shadow: 0 48px 80px -32px rgba(0,0,0,0.3);
+}
+.tab-input {
+  position: absolute;
+  opacity: 0;
+}
+.tab-label {
+  width: 100%;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #7f7f7f;
+  background: #e5e5e5;
+  transition: background 0.1s, color 0.1s;
+}
+.tab-label:hover {
+  background: #d8d8d8;
+}
+.tab-label:active {
+  background: #ccc;
+}
+.tab-input:focus + .tab-label {
+  box-shadow: inset 0px 0px 0px 3px #2aa1c0;
+  z-index: 1;
+}
+.tab-input:checked + .tab-label {
+  color: #000;
+  background: #fff;
+}
+.tab-panel {
+  display: none;
+  padding: 20px 30px 30px;
+  background: #fff;
+  width: 100%;
+}
+.tab-input:checked + .tab-label + .tab-panel {
+  display: block;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@media (min-width: 500px) {
+  .tab-label {
+  	width: auto;
+  }
+  .tab-panel {
+    order: 77;
+  }
+}
