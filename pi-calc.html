@@ -1,9 +1,9 @@
 <html>
 <head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
-<link rel="stylesheet" type="text/css" href="css/default.css">
-<link rel="stylesheet" type="text/css" href="css/flex-tabs.css">
+<link rel="stylesheet" type="text/css" href="css/default.css" />
+<link rel="stylesheet" type="text/css" href="css/flex-tabs.css" />
 </head>
 <body>
 
@@ -211,42 +211,47 @@
 	picalc_ng_app.directive('summaryArea', ()=> ({
 		scope: {value: "="},
 		template: `<textarea placeholder="..." ng-model="value" disabled></textarea>`,
-        link: (scope, element, attributes)=> {
-            scope.$watch("value", ()=> element[0].scrollTop = element[0].scrollHeight);
-        }
+		link: (scope, element, attributes)=> {
+			scope.$watch("value", ()=> element[0].scrollTop = element[0].scrollHeight);
+		}
 	}));
 	
 	picalc_ng_app.run(["$templateCache", ($templateCache)=> {
 		$templateCache.put(picalc_ng_tpl, document.getElementById(picalc_ng_tpl).innerHTML);
 	}]);
 	
-	const PicalcAppController = ["$scope", function ($scope) {
-		const cx = this;
-		cx.isCalculating = false;
-		cx.iterationLimit = "";
-		cx.summaryOutput = "";
-		cx.piOutput = undefined;
+	class PicalcAppController {
 		
-		cx.calcPi = (e)=> {
+		constructor ($scope) {
+			this.$scope = $scope;
+		}
+		
+		isCalculating = false;
+		iterationLimit = "";
+		summaryOutput = "";
+		piOutput = undefined;
+		
+		calcPi = (e)=> {
 			e.preventDefault();
 			this.summaryOutput = this.piOutput = "";
 			this.isCalculating = true;
 			calcPi(parseFloat(this.iterationLimit), false, this.updateSummary)
-				.then((result)=> $scope.$apply(()=> {
+				.then((result)=> this.$scope.$apply(()=> {
 					this.piOutput = result;
 					this.isCalculating = false;
 				}));
 		};
 		
-		cx.updateSummary = (pi, iteration, fraction)=> {
-			$scope.$apply(()=> this.summaryOutput += "iteration: "+ iteration +", pi: " + pi+'\n');
+		updateSummary = (pi, iteration, fraction)=> {
+			this.$scope.$apply(()=> this.summaryOutput += "iteration: "+ iteration +", pi: " + pi+'\n');
 		};
-	}];
+	};
+	PicalcAppController.$inject = ["$scope"];
 	
 	picalc_ng_app.component("picalcAppNg", {
 		templateUrl: picalc_ng_tpl,
-        controller: PicalcAppController,
-        controllerAs: "cx"
+		controller: PicalcAppController,
+		controllerAs: "cx"
 	});
 	
 	angular.element(document)
